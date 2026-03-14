@@ -7,7 +7,7 @@ A premium single-player iOS strategy game about rebuilding civilization after a 
 Last Feast is a city-builder / survival strategy game where you manage a survivor settlement — constructing buildings, gathering resources, crafting recipes, and keeping your population fed. No ads, no in-app purchases, no energy timers. One-time purchase.
 
 **Platform**: iOS 15+ (iPhone primary, iPad supported)
-**Engine**: Godot 4.x (GDScript)
+**Engine**: Unity 6 LTS (URP) — C#
 **Monetization**: Premium (~$6.99)
 
 ## Gameplay
@@ -37,11 +37,19 @@ Build **The Grand Table** — requires maxed building tiers, 200+ survivors, and
 
 ## Technical Details
 
+- Unity 6 LTS with Universal Render Pipeline (URP)
+- C# scripting
 - Offline-only, no server required
-- Save data stored as local JSON files
+- Save data stored as local JSON files (`JsonUtility`)
 - Offline progress calculated on app open
-- GameAnalytics integration
-- Apple StoreKit 2 for purchase
+- GameAnalytics Unity SDK
+- Unity IAP with Apple StoreKit 2
+
+## Setup
+
+1. Install Unity 6 LTS with iOS Build Support via Unity Hub
+2. Open project from the `LastFeast/` directory
+3. Add URP package via Package Manager if not already present
 
 ## Art Direction
 

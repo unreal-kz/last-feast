@@ -10,32 +10,70 @@ Full design specifications are in `LastFeast_GDD.docx`.
 
 ## Tech Stack
 
-- **Engine**: Godot 4.x with GDScript
+- **Engine**: Unity 6 LTS (6000.x) with Universal Render Pipeline (URP)
+- **Language**: C#
 - **Platform**: iOS 15+ (iPhone primary, iPad supported)
-- **Save System**: Local JSON files (no server/cloud required)
-- **Analytics**: GameAnalytics integration
-- **Purchases**: Apple StoreKit 2
+- **Save System**: Local JSON files via `JsonUtility` (no server/cloud required)
+- **Analytics**: GameAnalytics Unity SDK
+- **Purchases**: Unity IAP with Apple StoreKit 2
 - **Art Style**: Low-poly isometric 3D, fixed camera
 
-## Core Architecture
+## Project Structure
 
-### Gameplay Loops (3 nested)
-1. **30-second loop**: Tap to gather, assign survivors, start cooking
-2. **5-minute loop**: Complete builds, harvest crops, craft batches
-3. **Session loop (20–40 min)**: Unlock new building tiers or regions
+Unity project lives in `LastFeast/`. Key script directories:
+
+```
+LastFeast/Assets/Scripts/
+├── Core/           # GameManager, ResourceManager, SaveManager, TimeManager, EventBus
+├── Buildings/      # Building + BuildingData (ScriptableObject)
+├── Heroes/         # Hero + HeroData (ScriptableObject)
+├── Crafting/       # CraftingManager + Recipe (ScriptableObject)
+├── Survivors/      # SurvivorManager
+└── UI/             # UIManager
+```
+
+## Architecture
+
+### Namespaces
+- `LastFeast.Core` — singletons, resource management, save/load, events
+- `LastFeast.Buildings` — building placement, construction, production, upgrades
+- `LastFeast.Heroes` — hero discovery, assignment, bonuses
+- `LastFeast.Crafting` — recipe definitions, crafting queue
+- `LastFeast.Survivors` — population tracking, assignment
+- `LastFeast.UI` — panel management
+
+### Key Patterns
+- **GameManager** is a singleton (`DontDestroyOnLoad`) that orchestrates all other managers
+- **EventBus** is a static class with C# events — use it to decouple systems (e.g., `EventBus.OnResourceChanged`)
+- **ScriptableObjects** define data (BuildingData, HeroData, Recipe) — create instances in `Assets/Data/ScriptableObjects/`
+- **Save system** auto-saves on `OnApplicationPause` and `OnApplicationQuit`; JSON stored in `Application.persistentDataPath`
 
 ### Game Cycle
 `GATHER Resources → CRAFT Ingredients → COOK Meals → FEED Survivors → BUILD Upgrades`
 
-### Key Systems
+### Enums (defined in code)
+- `ResourceType`: Food, Water, Vegetables, Grain, Wood, ScrapMetal, MetalParts, Herbs, RareIngredients, Knowledge
+- `BuildingType`: Cookhouse, FarmPlot, Shelter, WellWaterPurifier, SalvageYard, Workshop, Storehouse, Infirmary, Greenhouse, GrandTable
+- `HeroRole`: Chef, Farmer, Engineer, Medic, Scavenger, Forager
+- `GameState`: MainMenu, Playing, Paused
 
-**Buildings** (10 types): Cookhouse, Farm Plots, Shelter, Well/Water Purifier, Salvage Yard, Workshop, Storehouse, Infirmary, Greenhouse, The Grand Table (win condition)
+## Setup
 
-**Resources** (10 types): Food/Meals, Water, Vegetables, Grain, Wood, Scrap Metal, Metal Parts, Herbs, Rare Ingredients, Knowledge
+1. Open Unity Hub → Add project from `LastFeast/` directory
+2. Ensure Unity 6 LTS is installed with iOS Build Support
+3. URP package should be added via Package Manager
+4. Create a new scene and attach GameManager, ResourceManager, SaveManager, TimeManager as components on a persistent GameObject
 
-**Heroes** (12 total, found through gameplay — not gacha): Chefs, Farmers, Engineers, Medics, Scavengers, Foragers — each with unique skills affecting their assigned building
+## Build Commands
 
-**Save/Offline**: Progress is calculated on app open based on elapsed time since last session (offline progression)
+```bash
+# Unity CLI build (requires Unity installed)
+/Applications/Unity/Hub/Editor/6000.*/Unity.app/Contents/MacOS/Unity \
+  -batchmode -nographics -projectPath ./LastFeast \
+  -buildTarget iOS -quit
 
-### Win Condition
-Build The Grand Table (requires max building tiers + 200+ survivors + craft the "Last Feast" recipe) → unlocks New Game+
+# Run tests
+/Applications/Unity/Hub/Editor/6000.*/Unity.app/Contents/MacOS/Unity \
+  -batchmode -nographics -projectPath ./LastFeast \
+  -runTests -testPlatform EditMode -quit
+```
